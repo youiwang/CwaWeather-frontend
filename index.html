@@ -63,7 +63,6 @@
         z-index: 100;
       }
 
-      /* === NEW: Dropdown Styling === */
       .location-container {
         position: relative;
         display: flex;
@@ -71,27 +70,21 @@
       }
 
       .location-pill {
-        /* Reset Default Browser Styles */
         appearance: none;
         -webkit-appearance: none;
-
-        /* Visual Style */
         background: var(--ac-yellow);
         color: var(--ac-brown);
-        padding: 5px 15px 5px 35px; /* Left padding for the Emoji */
+        padding: 5px 15px 5px 35px;
         border-radius: 20px;
         font-weight: 900;
         font-size: 1.1rem;
         font-family: "Zen Maru Gothic", sans-serif;
-
         border: 2px solid white;
         box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
-
-        /* Interaction */
         cursor: pointer;
         outline: none;
         transform: rotate(-2deg);
-        min-width: 130px; /* Ensure it's wide enough */
+        min-width: 140px;
         text-align: center;
         transition: transform 0.2s;
       }
@@ -100,7 +93,6 @@
         transform: rotate(-2deg) scale(0.95);
       }
 
-      /* The Pin Emoji */
       .location-icon {
         position: absolute;
         left: 12px;
@@ -108,7 +100,7 @@
         transform: translateY(-50%) rotate(-2deg);
         z-index: 2;
         font-size: 1.1rem;
-        pointer-events: none; /* Let clicks pass through to the select */
+        pointer-events: none;
       }
 
       .update-pill {
@@ -180,7 +172,6 @@
         color: var(--ac-brown);
         line-height: 1;
       }
-
       .hero-desc {
         font-size: 1.5rem;
         color: #8a7b70;
@@ -210,7 +201,6 @@
         font-size: 2rem;
         margin-bottom: 5px;
       }
-
       .advice-text {
         font-size: 1.4rem;
         font-weight: 900;
@@ -266,7 +256,6 @@
         font-size: 2.5rem;
         margin: 5px 0;
       }
-
       .mini-temp {
         font-size: 1.2rem;
         font-weight: 800;
@@ -301,7 +290,7 @@
       <div class="location-container">
         <span class="location-icon">📍</span>
         <select id="citySelect" class="location-pill">
-          <option value="" disabled selected>載入中...</option>
+          <option value="" disabled selected>定位中...</option>
         </select>
       </div>
       <div id="updateTime" class="update-pill">更新中...</div>
@@ -309,18 +298,60 @@
 
     <div class="container" id="mainContent" style="display: none">
       <div id="heroCard"></div>
-
       <h3 class="section-title">稍後預報</h3>
       <div class="scroll-container" id="futureForecasts"></div>
     </div>
 
     <script>
-      // ⚠️ IMPORTANT: Ensure your server.js is running and updated to the new code!
       const API_URL = "http://localhost:3000/api/weather/all";
-
-      // Store all cities here
       let allWeatherData = [];
 
+      // === 1. DATA: Geographic Order and Coordinates ===
+
+      // Define Regions for Dropdown Grouping
+      const REGIONS = {
+        北部區域: [
+          "基隆市",
+          "臺北市",
+          "新北市",
+          "桃園市",
+          "新竹市",
+          "新竹縣",
+          "苗栗縣",
+        ],
+        中部區域: ["臺中市", "彰化縣", "南投縣", "雲林縣"],
+        南部區域: ["嘉義市", "嘉義縣", "臺南市", "高雄市", "屏東縣"],
+        東部區域: ["宜蘭縣", "花蓮縣", "臺東縣"],
+        外島區域: ["澎湖縣", "金門縣", "連江縣"],
+      };
+
+      // Coordinates for Auto-Detection (City Center Lat/Lon)
+      const CITY_COORDS = {
+        基隆市: { lat: 25.1276, lon: 121.7392 },
+        臺北市: { lat: 25.032, lon: 121.5654 },
+        新北市: { lat: 25.0172, lon: 121.4625 },
+        桃園市: { lat: 24.9936, lon: 121.301 },
+        新竹市: { lat: 24.8138, lon: 120.9675 },
+        新竹縣: { lat: 24.8397, lon: 121.0107 },
+        苗栗縣: { lat: 24.5601, lon: 120.8214 },
+        臺中市: { lat: 24.1477, lon: 120.6736 },
+        彰化縣: { lat: 24.0518, lon: 120.5161 },
+        南投縣: { lat: 23.961, lon: 120.9719 },
+        雲林縣: { lat: 23.7092, lon: 120.4313 },
+        嘉義市: { lat: 23.4801, lon: 120.4491 },
+        嘉義縣: { lat: 23.4518, lon: 120.2555 },
+        臺南市: { lat: 22.9997, lon: 120.227 },
+        高雄市: { lat: 22.6273, lon: 120.3014 },
+        屏東縣: { lat: 22.5519, lon: 120.5487 },
+        宜蘭縣: { lat: 24.7021, lon: 121.7377 },
+        花蓮縣: { lat: 23.9872, lon: 121.6016 },
+        臺東縣: { lat: 22.7613, lon: 121.1445 },
+        澎湖縣: { lat: 23.5712, lon: 119.5797 },
+        金門縣: { lat: 24.4493, lon: 118.3766 },
+        連江縣: { lat: 26.1584, lon: 119.9515 },
+      };
+
+      // ... Keep original helper functions (getWeatherIcon, getAdvice, etc.) ...
       function getWeatherIcon(weather) {
         if (!weather) return "🌤️";
         if (weather.includes("晴")) return "☀️";
@@ -334,17 +365,14 @@
       function getAdvice(rainProb, maxTemp) {
         let rainIcon = "🌂";
         let rainText = "不用帶傘";
-        let rainVal = parseInt(rainProb.replace("%", "")); // Remove % if exists
-
+        let rainVal = parseInt(rainProb.replace("%", ""));
         if (rainVal > 30) {
           rainIcon = "☂️";
           rainText = "記得帶傘！";
         }
-
         let clothIcon = "👕";
         let clothText = "舒適穿搭";
         let tempVal = parseInt(maxTemp.replace("°C", ""));
-
         if (tempVal >= 28) {
           clothIcon = "🎽";
           clothText = "短袖出發";
@@ -352,7 +380,6 @@
           clothIcon = "🧥";
           clothText = "加件外套";
         }
-
         return { rainIcon, rainText, clothIcon, clothText };
       }
 
@@ -369,12 +396,8 @@
         const forecasts = cityData.forecasts;
         const current = forecasts[0];
         const others = forecasts.slice(1);
-
-        // 1. Render Hero Card
         const advice = getAdvice(current.rain, current.maxTemp);
         const period = getTimePeriod(current.startTime);
-
-        // Calculate Average Temp
         let max = parseInt(current.maxTemp);
         let min = parseInt(current.minTemp);
         const avgTemp = Math.round((max + min) / 2);
@@ -389,7 +412,6 @@
                         <div class="hero-temp">${avgTemp}°</div>
                     </div>
                     <div class="hero-desc">${current.weather}</div>
-                    
                     <div class="advice-grid">
                         <div class="advice-item">
                             <div class="advice-icon">${advice.rainIcon}</div>
@@ -409,19 +431,15 @@
                 </div>
             `;
 
-        // 2. Render Future Forecasts
         const scrollContainer = document.getElementById("futureForecasts");
         scrollContainer.innerHTML = "";
-
         const todayDate = new Date().getDate();
-
         others.forEach((f) => {
           let p = getTimePeriod(f.startTime);
           const fDate = new Date(f.startTime);
           if (fDate.getDate() !== todayDate) {
             p = "明天" + p;
           }
-
           scrollContainer.innerHTML += `
                     <div class="mini-card">
                         <div class="mini-time">${p}</div>
@@ -435,8 +453,6 @@
                     </div>
                 `;
         });
-
-        // 3. Update Date Display
         const now = new Date();
         const days = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
         document.getElementById("updateTime").textContent = `${
@@ -444,59 +460,137 @@
         }月${now.getDate()}日 ${days[now.getDay()]}`;
       }
 
-      // NEW: Populate the Dropdown Menu
+      // === 2. UI: Build Dropdown with Groups ===
       function initDropdown() {
         const select = document.getElementById("citySelect");
-        select.innerHTML = ""; // Clear "Loading..."
+        select.innerHTML = "";
 
-        // Populate options
-        allWeatherData.forEach((data, index) => {
-          const option = document.createElement("option");
-          option.value = index; // Use index to find data later
-          option.text = data.city;
-          select.appendChild(option);
-        });
+        // Loop through our defined Regions
+        for (const [regionName, cities] of Object.entries(REGIONS)) {
+          // Create <optgroup> (The Group Header)
+          const group = document.createElement("optgroup");
+          group.label = regionName;
 
-        // Try to find Kaohsiung as default, otherwise first city
-        let defaultIndex = allWeatherData.findIndex((d) => d.city === "高雄市");
-        if (defaultIndex === -1) defaultIndex = 0;
+          // Loop through cities in this region
+          cities.forEach((cityName) => {
+            // Find the actual data index in our API response
+            const index = allWeatherData.findIndex((d) => d.city === cityName);
+            if (index !== -1) {
+              const option = document.createElement("option");
+              option.value = index;
+              option.text = cityName;
+              group.appendChild(option);
+            }
+          });
 
-        select.value = defaultIndex;
+          select.appendChild(group);
+        }
 
-        // Initial Render
-        renderWeather(allWeatherData[defaultIndex]);
-
-        // Add Listener for changes
         select.addEventListener("change", (e) => {
           const idx = e.target.value;
           renderWeather(allWeatherData[idx]);
         });
       }
 
+      // === 3. LOGIC: Find Closest City ===
+      function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Radius of the earth in km
+        const dLat = (lat2 - lat1) * (Math.PI / 180);
+        const dLon = (lon2 - lon1) * (Math.PI / 180);
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(lat1 * (Math.PI / 180)) *
+            Math.cos(lat2 * (Math.PI / 180)) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+      }
+
+      function findClosestCityIndex(userLat, userLon) {
+        let minDistance = Infinity;
+        let closestCityName = "臺北市"; // Default fallback
+
+        for (const [cityName, coords] of Object.entries(CITY_COORDS)) {
+          const distance = getDistanceFromLatLonInKm(
+            userLat,
+            userLon,
+            coords.lat,
+            coords.lon
+          );
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestCityName = cityName;
+          }
+        }
+
+        // Return the index of this city in our Data Array
+        return allWeatherData.findIndex((d) => d.city === closestCityName);
+      }
+
+      // === 4. MAIN FLOW ===
       async function fetchWeather() {
         try {
           const delayPromise = new Promise((resolve) =>
             setTimeout(resolve, 1500)
           );
-          // Fetch the "ALL" endpoint
           const fetchPromise = fetch(API_URL).then((res) => res.json());
 
           const [_, json] = await Promise.all([delayPromise, fetchPromise]);
 
           if (json.success) {
-            allWeatherData = json.data; // Store the big array
-            initDropdown(); // Build the UI
+            allWeatherData = json.data;
+            initDropdown();
 
-            document.getElementById("loading").style.display = "none";
-            document.getElementById("mainContent").style.display = "block";
+            // --- Auto-Detect Location Logic ---
+            if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(
+                (position) => {
+                  // 1. Success: User allowed location
+                  const lat = position.coords.latitude;
+                  const lon = position.coords.longitude;
+                  const closestIndex = findClosestCityIndex(lat, lon);
+
+                  if (closestIndex !== -1) {
+                    document.getElementById("citySelect").value = closestIndex;
+                    renderWeather(allWeatherData[closestIndex]);
+                  } else {
+                    // Fallback if match failed
+                    renderWeather(allWeatherData[0]);
+                  }
+                  showContent();
+                },
+                (error) => {
+                  // 2. Error/Denied: Default to Taipei (or first item)
+                  console.log("Location denied or error, defaulting to Taipei");
+                  // Find Taipei index
+                  let taipeiIndex = allWeatherData.findIndex(
+                    (d) => d.city === "臺北市"
+                  );
+                  if (taipeiIndex === -1) taipeiIndex = 0;
+
+                  document.getElementById("citySelect").value = taipeiIndex;
+                  renderWeather(allWeatherData[taipeiIndex]);
+                  showContent();
+                }
+              );
+            } else {
+              // Browser doesn't support geo
+              renderWeather(allWeatherData[0]);
+              showContent();
+            }
           } else {
             throw new Error("API Error");
           }
         } catch (e) {
           console.error(e);
-          // If local server isn't running, show error
           alert("無法連接伺服器 (Localhost)。請確認後端已啟動！");
         }
+      }
+
+      function showContent() {
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
       }
 
       document.addEventListener("DOMContentLoaded", fetchWeather);
