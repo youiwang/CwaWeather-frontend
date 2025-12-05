@@ -6,9 +6,10 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>森森天氣</title>
-    <link rel="icon" type="image/png" href="./icon-v2.png" />
-    <link rel="apple-touch-icon" href="./icon-v2.png" />
+    <title>皮卡天氣</title>
+    <link rel="icon" type="image/png" href="./pikachu.jpg" />
+    <link rel="apple-touch-icon" href="./pikachu.jpg" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -51,6 +52,7 @@
         padding-bottom: 20px;
       }
 
+      /* === STATUS BAR === */
       .status-bar {
         display: flex;
         justify-content: space-between;
@@ -63,10 +65,11 @@
         z-index: 100;
       }
 
+      /* === NEW: IMPROVED DROPDOWN UX === */
       .location-container {
         position: relative;
-        display: flex;
-        align-items: center;
+        display: inline-block;
+        width: fit-content;
       }
 
       .location-pill {
@@ -74,32 +77,56 @@
         -webkit-appearance: none;
         background: var(--ac-yellow);
         color: var(--ac-brown);
-        padding: 5px 15px 5px 35px;
-        border-radius: 20px;
+
+        /* Padding: Top | Right (Space for Arrow) | Bottom | Left (Space for Pin) */
+        padding: 8px 40px 8px 35px;
+
+        border-radius: 30px;
         font-weight: 900;
         font-size: 1.1rem;
         font-family: "Zen Maru Gothic", sans-serif;
-        border: 2px solid white;
-        box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+
+        /* 3D Button Style */
+        border: 3px solid white;
+        border-bottom: 6px solid rgba(0, 0, 0, 0.1); /* The shadow/depth */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
         cursor: pointer;
         outline: none;
         transform: rotate(-2deg);
         min-width: 140px;
         text-align: center;
-        transition: transform 0.2s;
+        transition: all 0.1s ease;
       }
 
+      /* Press Effect */
       .location-pill:active {
-        transform: rotate(-2deg) scale(0.95);
+        border-bottom: 3px solid rgba(0, 0, 0, 0.1); /* Shrink shadow */
+        transform: rotate(-2deg) translateY(3px); /* Move button down */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       }
 
+      /* The Pin Icon 📍 */
       .location-icon {
         position: absolute;
         left: 12px;
         top: 50%;
-        transform: translateY(-50%) rotate(-2deg);
+        transform: translateY(-65%) rotate(-2deg);
         z-index: 2;
         font-size: 1.1rem;
+        pointer-events: none;
+      }
+
+      /* The Arrow Icon ▼ */
+      .dropdown-arrow {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-65%) rotate(-2deg);
+        z-index: 2;
+        font-size: 0.7rem;
+        color: var(--ac-brown);
+        opacity: 0.7;
         pointer-events: none;
       }
 
@@ -117,6 +144,7 @@
         margin: 0 auto;
       }
 
+      /* === HERO CARD === */
       .hero-card {
         background: var(--ac-cream);
         border-radius: 35px;
@@ -146,12 +174,13 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 10px;
+        gap: 15px;
         margin: 15px 0;
       }
 
       .hero-icon {
-        font-size: 5rem;
+        width: 130px;
+        height: auto;
         filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.1));
         animation: bounce 3s infinite;
       }
@@ -172,6 +201,7 @@
         color: var(--ac-brown);
         line-height: 1;
       }
+
       .hero-desc {
         font-size: 1.5rem;
         color: #8a7b70;
@@ -209,6 +239,7 @@
         line-height: 1.2;
       }
 
+      /* === SCROLL SECTION === */
       .section-title {
         font-size: 1.2rem;
         color: white;
@@ -222,7 +253,9 @@
         display: flex;
         overflow-x: auto;
         gap: 15px;
-        padding-bottom: 10px;
+        padding: 10px 10px 20px 10px;
+        scroll-snap-type: x mandatory;
+        width: 100%;
         scrollbar-width: none;
         -ms-overflow-style: none;
       }
@@ -239,6 +272,7 @@
         text-align: center;
         border: 3px solid white;
         flex-shrink: 0;
+        scroll-snap-align: center;
       }
 
       .mini-time {
@@ -253,15 +287,19 @@
       }
 
       .mini-icon {
-        font-size: 2.5rem;
-        margin: 5px 0;
+        width: 60px;
+        height: auto;
+        margin: 5px auto;
+        display: block;
       }
+
       .mini-temp {
         font-size: 1.2rem;
         font-weight: 800;
         color: var(--ac-dark);
       }
 
+      /* === LOADING === */
       .loading-screen {
         position: fixed;
         top: 0;
@@ -280,7 +318,11 @@
 
   <body>
     <div id="loading" class="loading-screen">
-      <div style="font-size: 4rem; animation: bounce 2s infinite">☁️</div>
+      <img
+        src="./binocular_ash.webp"
+        style="width: 240px; height: auto; animation: bounce 2s infinite"
+        alt="Loading..."
+      />
       <p style="color: white; font-weight: bold; margin-top: 20px">
         正在觀測雲的流動...
       </p>
@@ -289,26 +331,29 @@
     <div class="status-bar">
       <div class="location-container">
         <span class="location-icon">📍</span>
+
         <select id="citySelect" class="location-pill">
           <option value="" disabled selected>定位中...</option>
         </select>
+
+        <span class="dropdown-arrow">▼</span>
       </div>
+
       <div id="updateTime" class="update-pill">更新中...</div>
     </div>
 
     <div class="container" id="mainContent" style="display: none">
       <div id="heroCard"></div>
+
       <h3 class="section-title">稍後預報</h3>
       <div class="scroll-container" id="futureForecasts"></div>
     </div>
 
     <script>
-      const API_URL = "http://localhost:3000/api/weather/all";
+      const API_URL = "https://cwaweatehrbackend555.zeabur.app/api/weather/all";
       let allWeatherData = [];
 
       // === 1. DATA: Geographic Order and Coordinates ===
-
-      // Define Regions for Dropdown Grouping
       const REGIONS = {
         北部區域: [
           "基隆市",
@@ -325,7 +370,6 @@
         外島區域: ["澎湖縣", "金門縣", "連江縣"],
       };
 
-      // Coordinates for Auto-Detection (City Center Lat/Lon)
       const CITY_COORDS = {
         基隆市: { lat: 25.1276, lon: 121.7392 },
         臺北市: { lat: 25.032, lon: 121.5654 },
@@ -351,15 +395,16 @@
         連江縣: { lat: 26.1584, lon: 119.9515 },
       };
 
-      // ... Keep original helper functions (getWeatherIcon, getAdvice, etc.) ...
+      // === Helper Functions ===
+
       function getWeatherIcon(weather) {
-        if (!weather) return "🌤️";
-        if (weather.includes("晴")) return "☀️";
-        if (weather.includes("多雲")) return "⛅";
-        if (weather.includes("陰")) return "☁️";
-        if (weather.includes("雨")) return "🌧️";
-        if (weather.includes("雷")) return "⛈️";
-        return "🌤️";
+        if (!weather) return "./normal-castform.png";
+        if (weather.includes("晴")) return "./sunny-castform.png";
+        if (weather.includes("多雲")) return "./normal-castform.png";
+        if (weather.includes("陰")) return "./snowy-castform.png";
+        if (weather.includes("雨")) return "./rainy-castform.png";
+        if (weather.includes("雷")) return "./rainy-castform.png";
+        return "./normal-castform.png";
       }
 
       function getAdvice(rainProb, maxTemp) {
@@ -370,6 +415,7 @@
           rainIcon = "☂️";
           rainText = "記得帶傘！";
         }
+
         let clothIcon = "👕";
         let clothText = "舒適穿搭";
         let tempVal = parseInt(maxTemp.replace("°C", ""));
@@ -380,6 +426,7 @@
           clothIcon = "🧥";
           clothText = "加件外套";
         }
+
         return { rainIcon, rainText, clothIcon, clothText };
       }
 
@@ -402,13 +449,14 @@
         let min = parseInt(current.minTemp);
         const avgTemp = Math.round((max + min) / 2);
 
+        // 1. Hero Card
         document.getElementById("heroCard").innerHTML = `
                 <div class="hero-card">
                     <div class="hero-period">${period}</div>
                     <div class="hero-temp-container">
-                        <div class="hero-icon">${getWeatherIcon(
+                        <img src="${getWeatherIcon(
                           current.weather
-                        )}</div>
+                        )}" class="hero-icon" alt="${current.weather}">
                         <div class="hero-temp">${avgTemp}°</div>
                     </div>
                     <div class="hero-desc">${current.weather}</div>
@@ -431,6 +479,7 @@
                 </div>
             `;
 
+        // 2. Scroll List
         const scrollContainer = document.getElementById("futureForecasts");
         scrollContainer.innerHTML = "";
         const todayDate = new Date().getDate();
@@ -443,9 +492,9 @@
           scrollContainer.innerHTML += `
                     <div class="mini-card">
                         <div class="mini-time">${p}</div>
-                        <div class="mini-icon">${getWeatherIcon(
+                        <img src="${getWeatherIcon(
                           f.weather
-                        )}</div>
+                        )}" class="mini-icon" alt="${f.weather}">
                         <div class="mini-temp">${f.minTemp} - ${f.maxTemp}</div>
                         <div style="font-size:0.8rem; color:#888; margin-top:5px;">💧${
                           f.rain
@@ -453,6 +502,8 @@
                     </div>
                 `;
         });
+
+        // 3. Date
         const now = new Date();
         const days = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
         document.getElementById("updateTime").textContent = `${
@@ -460,20 +511,16 @@
         }月${now.getDate()}日 ${days[now.getDay()]}`;
       }
 
-      // === 2. UI: Build Dropdown with Groups ===
+      // === 2. UI: Build Dropdown ===
       function initDropdown() {
         const select = document.getElementById("citySelect");
         select.innerHTML = "";
 
-        // Loop through our defined Regions
         for (const [regionName, cities] of Object.entries(REGIONS)) {
-          // Create <optgroup> (The Group Header)
           const group = document.createElement("optgroup");
           group.label = regionName;
 
-          // Loop through cities in this region
           cities.forEach((cityName) => {
-            // Find the actual data index in our API response
             const index = allWeatherData.findIndex((d) => d.city === cityName);
             if (index !== -1) {
               const option = document.createElement("option");
@@ -482,7 +529,6 @@
               group.appendChild(option);
             }
           });
-
           select.appendChild(group);
         }
 
@@ -492,9 +538,9 @@
         });
       }
 
-      // === 3. LOGIC: Find Closest City ===
+      // === 3. LOGIC: GeoLocation ===
       function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Radius of the earth in km
+        const R = 6371;
         const dLat = (lat2 - lat1) * (Math.PI / 180);
         const dLon = (lon2 - lon1) * (Math.PI / 180);
         const a =
@@ -509,7 +555,7 @@
 
       function findClosestCityIndex(userLat, userLon) {
         let minDistance = Infinity;
-        let closestCityName = "臺北市"; // Default fallback
+        let closestCityName = "臺北市";
 
         for (const [cityName, coords] of Object.entries(CITY_COORDS)) {
           const distance = getDistanceFromLatLonInKm(
@@ -523,12 +569,10 @@
             closestCityName = cityName;
           }
         }
-
-        // Return the index of this city in our Data Array
         return allWeatherData.findIndex((d) => d.city === closestCityName);
       }
 
-      // === 4. MAIN FLOW ===
+      // === 4. Main Execution ===
       async function fetchWeather() {
         try {
           const delayPromise = new Promise((resolve) =>
@@ -542,49 +586,32 @@
             allWeatherData = json.data;
             initDropdown();
 
-            // --- Auto-Detect Location Logic ---
+            // Auto-Detect Location
             if (navigator.geolocation) {
               navigator.geolocation.getCurrentPosition(
                 (position) => {
-                  // 1. Success: User allowed location
                   const lat = position.coords.latitude;
                   const lon = position.coords.longitude;
                   const closestIndex = findClosestCityIndex(lat, lon);
 
-                  if (closestIndex !== -1) {
-                    document.getElementById("citySelect").value = closestIndex;
-                    renderWeather(allWeatherData[closestIndex]);
-                  } else {
-                    // Fallback if match failed
-                    renderWeather(allWeatherData[0]);
-                  }
+                  const finalIndex = closestIndex !== -1 ? closestIndex : 0;
+                  document.getElementById("citySelect").value = finalIndex;
+                  renderWeather(allWeatherData[finalIndex]);
                   showContent();
                 },
                 (error) => {
-                  // 2. Error/Denied: Default to Taipei (or first item)
-                  console.log("Location denied or error, defaulting to Taipei");
-                  // Find Taipei index
-                  let taipeiIndex = allWeatherData.findIndex(
-                    (d) => d.city === "臺北市"
-                  );
-                  if (taipeiIndex === -1) taipeiIndex = 0;
-
-                  document.getElementById("citySelect").value = taipeiIndex;
-                  renderWeather(allWeatherData[taipeiIndex]);
+                  renderWeather(allWeatherData[0]);
                   showContent();
                 }
               );
             } else {
-              // Browser doesn't support geo
               renderWeather(allWeatherData[0]);
               showContent();
             }
-          } else {
-            throw new Error("API Error");
           }
         } catch (e) {
           console.error(e);
-          alert("無法連接伺服器 (Localhost)。請確認後端已啟動！");
+          alert("無法連接伺服器 (Zeabur)。請確認後端已啟動！");
         }
       }
 
